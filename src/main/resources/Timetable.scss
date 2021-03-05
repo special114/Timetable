@@ -1,0 +1,46 @@
+.select-row {
+  margin: 20px 40px;
+  display: flex;
+}
+
+.form-label {
+  width: 140px;
+  margin-right: 20px;
+}
+
+.form-dropdown {
+  width: 200px;
+}
+
+.edit-prompt {
+  margin-left: 50px;
+}
+
+p {
+  padding-right: 20px;
+}
+
+.info-row {
+  margin-left: 5px;
+  width: 240px;
+}
+
+.info-col {
+  width: 130px;
+}
+
+.row {
+  margin: 3px;
+}
+
+.time-item {
+  margin-left: 5px;
+  width: 240px;
+  height: 43px;
+}
+
+.planner {
+  margin-left: 20px;
+}
+
+@import "node_modules/bootstrap/scss/bootstrap";
