@@ -2,23 +2,22 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import React, {useEffect, useState} from "react";
 import axios from "axios";
-import { LinkContainer } from 'react-router-bootstrap';
-import { Redirect } from 'react-router-dom';
+import authHeader from "./services/auth.header";
 
-import { Days, Hours, COLS } from './utils';
+import * as Utils from './utils';
 import "../resources/Timetable.scss";
 
 
 
 export default function EditForm(props) {
     const [isLoading, setLoading] = useState(true);
-    const [redirect, setRedirect] = useState(false);
     const [data, setData] = useState(undefined);
     const [act, setAct] = useState(undefined);
-    const [slot, setSlot] = useState(-1);
+    const [params, setParams] = useState({})
+    const [dicts, setDicts] = useState({});
 
     const fetchAvailable = (ver, id, slot) => {
-        axios.get(`api/activities/available?ver=${ver}&id=${id}&slot=${slot}`)
+        axios.get(`../api/activities/available?ver=${ver}&id=${id}&slot=${slot}`)
             .then(res => {
                  setData(res.data);
                  setLoading(false);
@@ -26,7 +25,7 @@ export default function EditForm(props) {
     }
 
     const checkIfOccupied = (ver, id, slot) => {
-        axios.get(`api/activities/${ver}?id=${id}&slot=${slot}`)
+        axios.get(`../api/activities/${ver}?id=${id}&slot=${slot}`)
             .then(res => {
                 setAct(res.data);
             });
@@ -34,21 +33,20 @@ export default function EditForm(props) {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        console.log(event);
         let group = {}, teacher = {}, room = {}, subject = {};
-        switch (props.ver) {
+        switch (params.ver) {
             case 1:
-                group.id = props.item.id;
+                group.id = params.id;
                 teacher.id = event.target['0'].value;
                 room.id = event.target['1'].value;
                 break;
             case 2:
-                teacher.id = props.item.id;
+                teacher.id = params.id;
                 room.id = event.target['0'].value;
                 group.id = event.target['1'].value;
                 break;
             case 3:
-                room.id = props.item.id;
+                room.id = params.id;
                 group.id = event.target['0'].value;
                 teacher.id = event.target['1'].value;
                 break;
@@ -59,47 +57,43 @@ export default function EditForm(props) {
             teacher: teacher,
             room: room,
             subject: subject,
-            slotId: slot,
+            slotId: params.slot,
         };
         if (!act)
-            axios.post("api/activities", reqBody)
-                .then(() => setRedirect(true))
+            axios.post("../api/activities", reqBody, { headers: authHeader() })
+                .then(() => props.return(1))
         else {
             reqBody.id = act.id;
-            axios.put("api/activities", reqBody)
-                .then(() => setRedirect(true))
+            axios.put("../api/activities", reqBody, { headers: authHeader() })
+                .then(() => props.return(1))
         }
     }
 
     const handleDelete = (id) => {
-        axios.delete(`api/activities/${id}`)
-            .then(() => setRedirect(true));
+        axios.delete(`../api/activities/${id}`, { headers: authHeader() })
+            .then(() => props.return(1));
     }
 
     useEffect(() => {
-        const queryString = require('query-string');
-        const { ver, id, slot } = queryString.parse(props.location.search);
-        setSlot(slot);
+        const { ver, id, slot } = props;
+        setParams({ ver, id, slot });
+        setDicts(Utils.getDicts(parseInt(ver)));
         fetchAvailable(ver, id, slot)
         checkIfOccupied(ver, id, slot);
     }, []);
 
     if (isLoading) {
-        return <div className="App">Loading...</div>;
-    }
-
-    if (redirect) {
-        return <Redirect to="/show-timetable" />
+        return <div>Loading...</div>;
     }
 
     return (
         <>
             <div className='edit-prompt'>
                 <h1>
-                    Edit {props.dicts.dictBasic}: {props.item.name}
+                    Edit {dicts.dictBasic}: {props.name}
                 </h1>
                 <h2>
-                    {Days[(slot - 1) % COLS]} {Hours[Math.floor((slot - 1) / COLS)]}
+                    {Utils.Days[(params.slot - 1) % Utils.COLS]} {Utils.Hours[Math.floor((params.slot - 1) / Utils.COLS)]}
                 </h2>
             </div>
             {act && <Button
@@ -109,19 +103,19 @@ export default function EditForm(props) {
             }
             <Form onSubmit={handleSubmit}>
                 <Form.Group className='select-row'>
-                    <Form.Label className='form-label'>Select {props.dicts.dict1}: </Form.Label>
+                    <Form.Label className='form-label'>Select {dicts.dict1}: </Form.Label>
                     <Form.Control
-                        defaultValue={act && act[`${props.dicts.dict1}`].id} style={{width: 250}} placeholder="choose" as='select'>
-                        {data[`${props.dicts.dict1}s`].map((item) =>
+                        defaultValue={act && act[`${dicts.dict1}`].id} style={{width: 250}} placeholder="choose" as='select'>
+                        {data[`${dicts.dict1}s`].map((item) =>
                             <option value={item.id}>{item.name}</option>
                         )}
                     </Form.Control>
                 </Form.Group>
                 <Form.Group className='select-row'>
-                    <Form.Label className='form-label'>Select {props.dicts.dict2}: </Form.Label>
+                    <Form.Label className='form-label'>Select {dicts.dict2}: </Form.Label>
                     <Form.Control
-                        defaultValue={act && act[`${props.dicts.dict2}`].id} style={{width: 250}} placeholder="choose" as='select'>
-                        {data[`${props.dicts.dict2}s`].map((item) =>
+                        defaultValue={act && act[`${dicts.dict2}`].id} style={{width: 250}} placeholder="choose" as='select'>
+                        {data[`${dicts.dict2}s`].map((item) =>
                             <option value={item.id}>{item.name}</option>
                         )}
                     </Form.Control>
@@ -137,14 +131,12 @@ export default function EditForm(props) {
                 </Form.Group>
 
                 <Button style={{marginLeft: 50}}type="submit">Submit</Button>
-                <LinkContainer to="/show-timetable">
                     <Button
                         style={{marginLeft: 5}}
-                        onClick={props.onCancel}
                         variant="outline-primary"
+                        onClick={() => props.return(0)}
                     >Cancel
                     </Button>
-                </LinkContainer>
             </Form>
         </>
     );

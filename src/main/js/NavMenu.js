@@ -18,20 +18,20 @@ function NavMenu(props) {
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
                 <Nav className="mr-auto">
-                    <LinkContainer to="/show-timetable">
-                        <Nav.Link onSelect={() => props.onSelect(1)}>Groups</Nav.Link>
+                    <LinkContainer to="/show-timetable/1">
+                        <Nav.Link>Groups</Nav.Link>
                     </LinkContainer>
-                    <LinkContainer to="/show-timetable">
-                        <Nav.Link onSelect={() => props.onSelect(2)}>Teachers</Nav.Link>
+                    <LinkContainer to="/show-timetable/2">
+                        <Nav.Link>Teachers</Nav.Link>
                     </LinkContainer>
-                    <LinkContainer to="/show-timetable">
-                        <Nav.Link onSelect={() => props.onSelect(3)}>Rooms</Nav.Link>
+                    <LinkContainer to="/show-timetable/3">
+                        <Nav.Link>Rooms</Nav.Link>
                     </LinkContainer>
                 </Nav>
                 <Nav>
                     <LinkContainer to={user ? "/home" : "/login"}>
                         <Nav.Link
-                                onSelect={user ? () => props.onSelect(4) : null}>
+                                onSelect={user ? () => props.onSelect() : null}>
                             {user ? "Log out" : "Log in"}
                         </Nav.Link>
                     </LinkContainer>
